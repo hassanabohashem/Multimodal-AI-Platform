@@ -1,0 +1,91 @@
+name: mmp
+
+x-gpu: &gpu
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
+
+services:
+  gateway:
+    build: { context: ., dockerfile: packages/gateway/Dockerfile }
+    profiles: [dev, full]
+    ports: ["8000:8000"]
+    env_file: .env
+    depends_on:
+      qdrant: { condition: service_started }
+      embeddings: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 10s
+      retries: 12
+
+  vllm:
+    image: vllm/vllm-openai:v0.9.1   # PIN: verify multimodal LoRA works on this tag before bumping
+    profiles: [full]
+    <<: *gpu
+    command: >
+      --model ${MMP_BASE_MODEL:-Qwen/Qwen3-VL-4B-Instruct}
+      --max-model-len 8192
+      --gpu-memory-utilization 0.85
+      --limit-mm-per-prompt image=2
+      --enable-lora
+      --lora-modules caption-lora=/adapters/caption vqa-lora=/adapters/vqa
+      --max-lora-rank 16
+    volumes:
+      - ./artifacts/adapters:/adapters:ro
+      - hf_cache:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 15s
+      retries: 40
+
+  embeddings:
+    build: { context: ., dockerfile: packages/embeddings/Dockerfile }
+    profiles: [dev, full]
+    env_file: .env
+    volumes: [hf_cache:/root/.cache/huggingface]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8002/readyz')"]
+      interval: 15s
+      retries: 40
+
+  ocr:
+    build: { context: packages/ocr }
+    profiles: [full]
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8003/readyz')"]
+      interval: 15s
+      retries: 40
+
+  qdrant:
+    image: qdrant/qdrant:v1.14.0
+    profiles: [dev, full]
+    volumes: [qdrant_storage:/qdrant/storage]
+
+  frontend:
+    build: { context: frontend/streamlit_app }
+    profiles: [full]
+    ports: ["8501:8501"]
+    env_file: .env
+    depends_on: [gateway]
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    profiles: [monitoring]
+    volumes: ["./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    profiles: [monitoring]
+    ports: ["3000:3000"]
+    volumes: ["./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro"]
+
+volumes:
+  hf_cache:
+  qdrant_storage:

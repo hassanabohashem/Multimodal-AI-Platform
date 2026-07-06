@@ -1,0 +1,3 @@
+timeouts_s: { caption: 30, vqa: 30, search: 5, ocr: 120 }
+limits: { max_image_mb: 10, max_pdf_pages: 20, max_top_k: 50 }
+circuit_breaker: { failures_to_open: 5, half_open_after_s: 20 }

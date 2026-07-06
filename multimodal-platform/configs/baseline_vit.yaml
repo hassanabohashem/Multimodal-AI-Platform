@@ -1,0 +1,6 @@
+encoder: vit_small_patch16_224   # timm
+decoder: { layers: 6, d_model: 512, heads: 8, ff: 2048, dropout: 0.1 }
+tokenizer: { vocab_size: 8000, type: bpe }
+train: { epochs: 12, lr: 3.0e-4, batch: 64, label_smoothing: 0.1, warmup_steps: 2000, seed: 42 }
+decode: { beam: 3, max_len: 30 }
+wandb: { project: mmp-caption-baseline }

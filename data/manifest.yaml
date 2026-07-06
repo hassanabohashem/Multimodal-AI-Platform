@@ -1,0 +1,26 @@
+# Every dataset used, with license and checksum. data/scripts/download.py verifies these.
+datasets:
+  coco2017_train_images:
+    url: http://images.cocodataset.org/zips/train2017.zip
+    sha256: REPLACE_AFTER_FIRST_DOWNLOAD
+    license: CC-BY 4.0 (annotations); images per Flickr terms
+  coco2017_val_images:
+    url: http://images.cocodataset.org/zips/val2017.zip
+    sha256: REPLACE_AFTER_FIRST_DOWNLOAD
+    license: CC-BY 4.0
+  coco_karpathy_split:
+    url: https://cs.stanford.edu/people/karpathy/deepimagesent/caption_datasets.zip
+    sha256: REPLACE_AFTER_FIRST_DOWNLOAD
+    license: research use
+  vqa_v2:
+    url: https://visualqa.org/download.html   # multiple files; see download.py
+    sha256: per-file
+    license: CC-BY 4.0
+  sroie:
+    url: https://rrc.cvc.uab.es/?ch=13
+    sha256: manual-download   # registration required
+    license: research use
+  funsd:
+    url: https://guillaumejaume.github.io/FUNSD/dataset.zip
+    sha256: REPLACE_AFTER_FIRST_DOWNLOAD
+    license: research use (no redistribution)
