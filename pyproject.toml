@@ -1,0 +1,36 @@
+[project]
+name = "multimodal-platform"
+version = "0.1.0"
+description = "Production-patterned multimodal AI platform: captioning, VQA, semantic search, OCR."
+requires-python = ">=3.12"
+
+[tool.uv.workspace]
+members = ["packages/common", "packages/gateway", "packages/embeddings", "packages/training"]
+# NOTE: packages/ocr is intentionally NOT in the workspace.
+# PaddlePaddle must not share an environment with PyTorch; the OCR service
+# has its own lockfile and container (see docs/adr/004-ocr-model.md).
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "D"]
+ignore = ["D203", "D213", "D107"]
+pydocstyle.convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+  "integration: requires docker compose dev profile",
+  "gpu: requires a CUDA GPU",
+]
